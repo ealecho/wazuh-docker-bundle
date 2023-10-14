@@ -25,4 +25,11 @@ sleep 10s
 sed -i "s|set_pass|${WAPI_PASS}|g" "${D1R}/config/wazuh-dashboard/wazuh_app.yml"
 docker restart wazuh.dashboard
 
+# set wazuh agent password
+docker exec wazuh.manager bash -c "echo ${WAGENT_PASS} > /var/ossec/etc/authd.pass"
+docker exec wazuh.manager chmod 640 /var/ossec/etc/authd.pass
+docker exec wazuh.manager chown root:wazuh /var/ossec/etc/authd.pass
+docker exec wazuh.manager sed -i "/use_password/c<use_password>yes</use_password>" /var/ossec/etc/ossec.conf
+docker restart wazuh.manager
+
 echo -e "...done"

@@ -14,6 +14,9 @@ WAPI_PASS=
 
 # The general recommendation is to allocate 50% of the available system memory to wazuh-indexer, with a maximum of 32GB
 JAVA_HEAP=1g
+
+# wazuh agent password for authentication
+WAGENT_PASS=
 ```
 
 Step 2: **Deployment** Run deploy.sh as sudo, `sudo bash deploy.sh`
