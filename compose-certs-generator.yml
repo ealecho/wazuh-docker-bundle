@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  generator:
+    image: wazuh/wazuh-certs-generator:0.0.1
+    hostname: wazuh-certs-generator
+    volumes:
+      - ./config/wazuh-sslcerts/:/certificates/
+      - ./config/wazuh-sslcerts/sslcerts_config.yml:/config/certs.yml

@@ -1,0 +1,132 @@
+version: "3.8"
+
+services:
+  wazuh.indexer:
+    restart: always
+    build:
+      context: ./config/wazuh-indexer
+      dockerfile: wazuh_indexer.dockerfile
+      args:
+        - WAZUH_VERSION=${WAZUH_VERSION}
+    image: x01/wazuh-indexer:${WAZUH_VERSION}
+    hostname: wazuh.indexer
+    container_name: wazuh.indexer
+    volumes:
+      - wazuh-indexer-data:/var/lib/wazuh-indexer
+      - ./config/wazuh-sslcerts/root-ca.pem:/usr/share/wazuh-indexer/config/certs/root-ca.pem
+      - ./config/wazuh-sslcerts/wazuh.indexer-key.pem:/usr/share/wazuh-indexer/config/certs/wazuh.indexer.key
+      - ./config/wazuh-sslcerts/wazuh.indexer.pem:/usr/share/wazuh-indexer/config/certs/wazuh.indexer.pem
+      - ./config/wazuh-sslcerts/admin.pem:/usr/share/wazuh-indexer/config/certs/admin.pem
+      - ./config/wazuh-sslcerts/admin-key.pem:/usr/share/wazuh-indexer/config/certs/admin-key.pem
+      - ./config/wazuh-indexer/wazuh_indexer.yml:/usr/share/wazuh-indexer/config/opensearch.yml
+      - ./config/wazuh-indexer/internal_users.yml:/usr/share/wazuh-indexer/plugins/opensearch-security/securityconfig/internal_users.yml
+    networks:
+      - wazuh_net
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - "OPENSEARCH_JAVA_OPTS=-Xms${JAVA_HEAP} -Xmx${JAVA_HEAP}"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  wazuh.dashboard:
+    restart: always
+    build:
+      context: ./config/wazuh-dashboard
+      dockerfile: wazuh_dashboard.dockerfile
+      args:
+        - WAZUH_VERSION=${WAZUH_VERSION}
+    image: x01/wazuh-dashboard:${WAZUH_VERSION}
+    hostname: wazuh.dashboard
+    container_name: wazuh.dashboard
+    volumes:
+      - ./config/wazuh-sslcerts/wazuh.dashboard.pem:/usr/share/wazuh-dashboard/certs/wazuh-dashboard.pem
+      - ./config/wazuh-sslcerts/wazuh.dashboard-key.pem:/usr/share/wazuh-dashboard/certs/wazuh-dashboard-key.pem
+      - ./config/wazuh-sslcerts/root-ca.pem:/usr/share/wazuh-dashboard/certs/root-ca.pem
+      - ./config/wazuh-dashboard/wazuh_dashboard.yml:/usr/share/wazuh-dashboard/config/opensearch_dashboards.yml
+      - ./config/wazuh-dashboard/wazuh_app.yml:/usr/share/wazuh-dashboard/data/wazuh/config/wazuh.yml
+    networks:
+      - wazuh_net
+    ports:
+      - 5601:5601
+    environment:
+      - WAZUH_API_URL=https://wazuh.manager
+      - DASHBOARD_USERNAME=${WI_USER}
+      - DASHBOARD_PASSWORD=${WI_PASS}
+      - API_USERNAME=${WAPI_USER}
+      - API_PASSWORD=${WAPI_PASS}
+    depends_on:
+      - wazuh.indexer
+    links:
+      - wazuh.indexer:wazuh.indexer
+      - wazuh.manager:wazuh.manager
+
+  wazuh.manager:
+    restart: always
+    build:
+      context: ./config/wazuh-manager
+      dockerfile: wazuh_manager.dockerfile
+      args: 
+        - WAZUH_VERSION=${WAZUH_VERSION}
+    image: x01/wazuh-manager:${WAZUH_VERSION}
+    hostname: wazuh.manager
+    container_name: wazuh.manager
+    volumes:
+      - wazuh-agentless:/var/ossec/agentless
+      - wazuh-etc:/var/ossec/etc # >= 4.0.0
+      - wazuh-queue:/var/ossec/queue
+      - wazuh-logs:/var/ossec/logs # >= 4.0.0
+      - wazuh-api-configuration:/var/ossec/api/configuration
+      - wazuh-var-multigroups:/var/ossec/var/multigroups
+      - wazuh-integrations:/var/ossec/integrations
+      - wazuh-active_response:/var/ossec/active-response/bin
+      - wazuh-wodles:/var/ossec/wodles
+      - filebeat-etc:/etc/filebeat
+      - filebeat-lib-var:/var/lib/filebeat
+    networks:
+      - wazuh_net
+    ports:
+      - 1514:1514
+      - 1514:1514/udp
+      - 1515:1515
+      - 55000:55000
+    environment:
+      - API_USERNAME=${WAPI_USER}
+      - API_PASSWORD=${WAPI_PASS}
+
+networks:
+  wazuh_net:
+    name: wazuh_net
+    driver: bridge
+
+volumes:
+  wazuh-indexer-data:
+    name: wazuh-indexer-data
+  wazuh-agentless:
+    name: wazuh-agentless
+  wazuh-etc:
+    name: wazuh-etc
+  wazuh-queue:
+    name: wazuh-queue
+  wazuh-logs:
+    name: wazuh-logs
+  wazuh-api-configuration:
+    name: wazuh-api-configuration
+  wazuh-var-multigroups:
+    name: wazuh-var-multigroups
+  wazuh-integrations:
+    name: wazuh-integrations
+  wazuh-active_response:
+    name: wazuh-active_response
+  wazuh-wodles:
+    name: wazuh-wodles
+  filebeat-etc:
+    name: filebeat-etc
+  filebeat-lib-var:
+    name: filebeat-lib-var
