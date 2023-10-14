@@ -6,7 +6,7 @@ _meta:
   config_version: 2
 
 w4zuh_adm1n:
-  hash:config_hash
+  hash: set_hash
   reserved: true
   backend_roles:
   - "admin"
