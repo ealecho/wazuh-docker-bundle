@@ -1,0 +1,13 @@
+---
+# wazuh credential
+
+_meta:
+  type: "internalusers"
+  config_version: 2
+
+w4zuh_adm1n:
+  hash:set_hash
+  reserved: true
+  backend_roles:
+  - "admin"
+  description: "Main User"
