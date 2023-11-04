@@ -19,6 +19,4 @@ JAVA_HEAP=1g
 WAGENT_PASS=
 ```
 
-- Config filebeat: `/var/lib/docker/volumes/filebeat-etc/_data/filebeat.yml` output.elasticsearch `username: w4zuh_adm1n`, `password: <password>` & `ssl.verification_mode: none` to send alerts to wazuh indexer.
-
 Step 2: **Deployment** Run deploy.sh as sudo, `sudo bash deploy.sh`

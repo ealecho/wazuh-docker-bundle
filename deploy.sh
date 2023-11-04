@@ -30,6 +30,11 @@ docker exec wazuh.manager bash -c "echo ${WAGENT_PASS} > /var/ossec/etc/authd.pa
 docker exec wazuh.manager chmod 640 /var/ossec/etc/authd.pass
 docker exec wazuh.manager chown root:wazuh /var/ossec/etc/authd.pass
 docker exec wazuh.manager sed -i "/use_password/c<use_password>yes</use_password>" /var/ossec/etc/ossec.conf
+
+sed -i "s|#username:|username: '${WI_USER}'|g" "/var/lib/docker/volumes/filebeat-etc/_data/filebeat.yml"
+sed -i "s|#password:|password: '${WI_PASS}'|g" "/var/lib/docker/volumes/filebeat-etc/_data/filebeat.yml"
+sed -i "s|#ssl.verification_mode:|ssl.verification_mode: none|g" "/var/lib/docker/volumes/filebeat-etc/_data/filebeat.yml"
+
 docker restart wazuh.manager
 
 echo -e "...done"
